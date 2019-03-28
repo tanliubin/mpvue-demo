@@ -64,3 +64,77 @@ git clone https://github.com/youzan/vant-weapp.git
     }
   }
 ```
+### mpvue使用vuex并使vuex状态持久化（缓存到本地）
+配置vuex
+1、目录结构
+```
+│ ├── store      //状态管理 vuex配置目录
+│ │  └── actions.js    //actions异步修改状态
+│ │  └── getters.js    //getters计算过滤操作
+│ │  └── mutation-types.js    //mutations 类型
+│ │  └── mutations.js    //修改状态
+│ │  └── index.js    //我们组装模块并导出 store 的地方
+│ │  └── state.js    //数据源定义
+--------------------- 
+```
+2、main.js中引入store, 并绑定到Vue构造函数的原型上，这样在每个vue的组件都可以通过this.$store访问store对象。
+```angular2html
+import store from './store/index'
+Vue.prototype.$store = store
+```
+3、定义初始变量store/state.js
+```angular2html
+const state = {
+  userInfo: null
+}
+export default state
+```
+4、mutation类型
+方便检测错误和书写，一般写方法
+```angular2html
+export const USER_INFO = 'USER_INFO'
+```
+5、store/mutations.js
+写处理方法
+```angular2html
+import * as types from './mutations-types'
+const matations = {
+  /**
+   * state:当前状态树
+   * v: 提交matations时传的参数
+   */
+  [types.USER_INFO] (state, v) {
+    state.userInfo = v
+  }
+
+}
+
+export default matations
+```
+6、store/index.js
+汇总配置，使用vuex-persistedstate，使vuex状态持久化（缓存到本地）
+```angular2html
+import Vue from 'vue'
+import Vuex from 'vuex'
+import state from './state'
+import mutations from './mutations'
+import createPersistedState from 'vuex-persistedstate'
+
+Vue.use(Vuex)
+
+export default new Vuex.Store({
+  state,
+  mutations,
+  plugins: [
+  // 使用vuex-persistedstate，使vuex状态持久化（缓存到本地）
+    createPersistedState({
+      storage: {
+        getItem: key => wx.getStorageSync(key),
+        setItem: (key, value) => wx.setStorageSync(key, value),
+        removeItem: key => {}
+      }
+    })
+  ]
+})
+
+```
